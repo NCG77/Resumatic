@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/upload/', views.upload_and_chunk, name='upload_chunk'),
     path('api/query/', views.query_vector_store, name='query'),
+    path('company-search/', views.company_search, name='company_search'),
 ]

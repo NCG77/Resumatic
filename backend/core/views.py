@@ -1,5 +1,5 @@
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Pinecone
 from langchain.embeddings import HuggingFaceEmbeddings
 from django.http import JsonResponse
@@ -9,6 +9,7 @@ import tempfile
 import json
 from io import BytesIO
 from pinecone import Pinecone as PineconeClient
+from .services import resume
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -64,29 +65,45 @@ def upload_and_chunk(request):
 
 
 @require_http_methods(["POST"])
+def company_search(request):
+    try:
+        data = json.loads(request.body)
+        c_name = data.get('company_name', '').strip()
+        
+        if not c_name:
+            return JsonResponse({'error': 'Company name is required'}, status=400)
+        
+        val = resume.research(c_name)
+        
+        if not val or val.startswith('Error') or val.startswith('No'):
+            return JsonResponse({'error': "Details not found"}, status=500)
+        else:
+            return JsonResponse({
+                'success': True,
+                'company_details': val
+            })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
 def query_vector_store(request):
     try:
         data = json.loads(request.body)
+        JD = data.get('jd')
         query = data.get('query')
         index_name = data.get('index_name')
         
-        if not query or not index_name:
-            return JsonResponse({'error': 'Missing query or index_name'}, status=400)
-
-        index = pc.Index(index_name)
-        vector_store = Pinecone(index, embedding.embed_query, "text")
-        results = vector_store.similarity_search(query, k=3)
+        if not JD or not query or not index_name:
+            return JsonResponse({'error': 'Missing required fields: jd, query, index_name'}, status=400)
+        
+        usr_data = resume.data_fetching(query, index_name, pc, embedding)
+        value = resume.user_summary(usr_data, JD)
         
         return JsonResponse({
             'success': True,
-            'results': [
-                {
-                    'content': result.page_content,
-                    'metadata': result.metadata
-                }
-                for result in results
-            ]
+            'summary': value
         })
-    
+
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
