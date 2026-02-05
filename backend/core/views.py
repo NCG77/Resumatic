@@ -1,14 +1,15 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Pinecone
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from pinecone import Pinecone as PineconeClient
 import os
 import tempfile
 import json
 from io import BytesIO
-from pinecone import Pinecone as PineconeClient
 from .services import resume
 from dotenv import load_dotenv
 
@@ -64,6 +65,7 @@ def upload_and_chunk(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def company_search(request):
     try:
@@ -75,13 +77,17 @@ def company_search(request):
         
         val = resume.research(c_name)
         
-        if not val or val.startswith('Error') or val.startswith('No'):
+        if not val:
             return JsonResponse({'error': "Details not found"}, status=500)
-        else:
-            return JsonResponse({
-                'success': True,
-                'company_details': val
-            })
+        if val.startswith('No'):
+            return JsonResponse({'error': val}, status=400)
+        if val.startswith('Error'):
+            return JsonResponse({'error': val}, status=500)
+
+        return JsonResponse({
+            'success': True,
+            'company_details': val
+        })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

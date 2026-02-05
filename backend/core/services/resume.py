@@ -1,4 +1,4 @@
-from pinecone import Pinecone as PineconeClient
+from pinecone import Pinecone
 from langchain_community.vectorstores import Pinecone
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
@@ -56,7 +56,7 @@ def research(c_name):
         load_dotenv()
         llm = ChatGoogleGenerativeAI(
             api_key=os.getenv("GEMINI_API_KEY"),
-            model="gemini-2.0-flash-exp"
+            model="gemini-2.5-pro"
         )
             
         prompt = f"""
