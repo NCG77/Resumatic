@@ -1,4 +1,4 @@
-langchain==0.1.0
+langchain==0.2.5
 langchain-openai==0.0.2
 langchain-community
 langchain-google-genai
