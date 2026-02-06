@@ -21,6 +21,8 @@ from core import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/upload/', views.upload_and_chunk, name='upload_chunk'),
+    path('api/upload-resume/', views.upload_and_chunk, name='upload_resume'),
+    path('api/upload-resume', views.upload_and_chunk, name='upload_resume_no_slash'),
     path('api/query/', views.query_vector_store, name='query'),
     path('api/company_search/', views.company_search, name='company_search'),
     path('api/company_search', views.company_search, name='company_search_no_slash'),

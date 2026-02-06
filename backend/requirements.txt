@@ -1,8 +1,10 @@
 langchain==0.1.0
 langchain-openai==0.0.2
 langchain-community
+langchain-google-genai
 python-dotenv==1.0.0
 django==5.2
+django-cors-headers
 openai==1.3.0
 PyPDF2==3.0.1
 pinecone==3.0.0

@@ -1,68 +1,74 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Pinecone
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_pinecone import PineconeVectorStore
+from langchain_huggingface import HuggingFaceEmbeddings
+from pinecone import Pinecone, ServerlessSpec
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from pinecone import Pinecone as PineconeClient
 import os
 import tempfile
 import json
-from io import BytesIO
-from .services import resume
 from dotenv import load_dotenv
+from .services import resume
 
 load_dotenv()
-pc = PineconeClient(api_key=os.getenv('PINECONE_API_KEY'))
-embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+embedding = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def upload_and_chunk(request):
     try:
-        if 'file' not in request.FILES:
-            return JsonResponse({'error': 'No file provided'}, status=400)
-        uploaded_file = request.FILES['file']
+        if "file" not in request.FILES:
+            return JsonResponse({"error": "No file provided"}, status=400)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+        uploaded_file = request.FILES["file"]
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             for chunk in uploaded_file.chunks():
-                tmp_file.write(chunk)
-            tmp_path = tmp_file.name
-        
+                tmp.write(chunk)
+            tmp_path = tmp.name
+
         loader = PyPDFLoader(tmp_path)
         docs = loader.load()
-        
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=150
         )
         chunks = splitter.split_documents(docs)
-        file_name = uploaded_file.name.replace('.pdf', '').replace(' ', '_').lower()
+
+        file_name = uploaded_file.name.replace(".pdf", "").replace(" ", "-").lower()
         index_name = f"resume-{file_name}"
-        try:
-            vector_store = Pinecone.from_documents(
-                chunks,
-                embedding,
-                index_name=index_name
+        existing = [i["name"] for i in pc.list_indexes()]
+        if index_name not in existing:
+            pc.create_index(
+                name=index_name,
+                dimension=384,
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
-        except Exception as e:
-            vector_store = Pinecone(
-                pc.Index(index_name),
-                embedding.embed_query,
-                "text"
-            )
-            vector_store.add_documents(chunks)
-        
+
+        index = pc.Index(index_name)
+        vectorstore = PineconeVectorStore(
+            index=index,
+            embedding=embedding
+        )
+
+        vectorstore.add_documents(chunks)
         os.unlink(tmp_path)
         return JsonResponse({
-            'success': True,
-            'message': f'Successfully uploaded {len(chunks)} chunks to Pinecone',
-            'chunks_count': len(chunks),
-            'index_name': index_name
+            "success": True,
+            "message": f"{len(chunks)} chunks uploaded",
+            "index_name": index_name
         })
-    
+
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
@@ -70,46 +76,45 @@ def upload_and_chunk(request):
 def company_search(request):
     try:
         data = json.loads(request.body)
-        c_name = data.get('company_name', '').strip()
-        
-        if not c_name:
-            return JsonResponse({'error': 'Company name is required'}, status=400)
-        
-        val = resume.research(c_name)
-        
-        if not val:
-            return JsonResponse({'error': "Details not found"}, status=500)
-        if val.startswith('No'):
-            return JsonResponse({'error': val}, status=400)
-        if val.startswith('Error'):
-            return JsonResponse({'error': val}, status=500)
+        name = data.get("company_name", "").strip()
+
+        if not name:
+            return JsonResponse({"error": "Company name required"}, status=400)
+
+        result = resume.research(name)
+
+        if not result:
+            return JsonResponse({"error": "No data found"}, status=404)
+
+        if result.startswith("Error") or result.startswith("No"):
+            return JsonResponse({"error": result}, status=500)
 
         return JsonResponse({
-            'success': True,
-            'company_details': val
+            "success": True,
+            "company_details": result
         })
+
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
 
-
+@csrf_exempt
 @require_http_methods(["POST"])
 def query_vector_store(request):
     try:
         data = json.loads(request.body)
-        JD = data.get('jd')
-        query = data.get('query')
-        index_name = data.get('index_name')
-        
-        if not JD or not query or not index_name:
-            return JsonResponse({'error': 'Missing required fields: jd, query, index_name'}, status=400)
-        
-        usr_data = resume.data_fetching(query, index_name, pc, embedding)
-        value = resume.user_summary(usr_data, JD)
-        
+        jd = data.get("jd")
+        index_name = data.get("index_name")
+
+        if not jd or not index_name:
+            return JsonResponse({"error": "jd and index_name required"}, status=400)
+
+        user_chunks = resume.data_fetching(jd, index_name, pc, embedding)
+        final = resume.user_summary(user_chunks, jd)
+
         return JsonResponse({
-            'success': True,
-            'summary': value
+            "success": True,
+            "summary": final
         })
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
