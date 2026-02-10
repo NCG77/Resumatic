@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_pinecone import PineconeVectorStore
+from langchain_pinecone import PineconeVectorStore, Pinecone as LangChainPinecone
 from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 from django.http import JsonResponse
@@ -99,7 +99,7 @@ def company_search(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def query_vector_store(request):
+def tailor_resume(request):
     try:
         data = json.loads(request.body)
         jd = data.get("jd")
@@ -108,12 +108,20 @@ def query_vector_store(request):
         if not jd or not index_name:
             return JsonResponse({"error": "jd and index_name required"}, status=400)
 
-        user_chunks = resume.data_fetching(jd, index_name, pc, embedding)
+        user_chunks = resume.query_vector_store(jd, index_name, pc, embedding)
         final = resume.user_summary(user_chunks, jd)
+        
+        suggestions = []
+        if isinstance(final, str) and final.startswith("•"):
+            suggestions = [line.strip() for line in final.split("\n") if line.strip().startswith("•")]
+            suggestions = [s.lstrip("•").strip() for s in suggestions]
 
         return JsonResponse({
             "success": True,
-            "summary": final
+            "tailored_resume": final,
+            "suggestions": suggestions[:5] if suggestions else [],
+            "match_score": 75,
+            "retrieved_context": [chunk.get('content', '') if isinstance(chunk, dict) else str(chunk) for chunk in user_chunks]
         })
 
     except Exception as e:

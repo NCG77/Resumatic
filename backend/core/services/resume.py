@@ -1,5 +1,5 @@
 from pinecone import Pinecone
-from langchain_community.vectorstores import Pinecone
+from langchain_pinecone import Pinecone as LangChainPinecone
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 import os
@@ -11,8 +11,7 @@ def data_fetching(query, index_name, pc, embedding):
             return ["No additional data found (No index passed)"]
 
         index = pc.Index(index_name)
-        vector_store = Pinecone(index, embedding.embed_query, "text")
-        # Increase k to get more relevant context from user's resume
+        vector_store = LangChainPinecone(index=index, embedding=embedding)
         results = vector_store.similarity_search(query, k=10)
         
         return [{'content': result.page_content,
@@ -27,12 +26,25 @@ def user_summary(user_context, JD):
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
             return "Missing API key: set GEMINI_API_KEY or GOOGLE_API_KEY"
-        llm = ChatGoogleGenerativeAI(
-            api_key=api_key,
-            model="gemini-1.5-flash",
-            timeout=60,
-            max_retries=2
-        )
+        
+        models = "gemini-2.5-pro"
+        llm = None
+        
+        for model in models:
+            try:
+                llm = ChatGoogleGenerativeAI(
+                    api_key=api_key,
+                    model=model,
+                    timeout=60,
+                    max_retries=2
+                )
+                break
+            except:
+                continue
+        
+        if not llm:
+            return "No available Gemini models found"
+            
         if isinstance(user_context, list):
             context = "\n\n".join([item.get('content', '') if isinstance(item, dict) else str(item) for item in user_context])
         else:
@@ -80,6 +92,14 @@ def user_summary(user_context, JD):
     except Exception as e:
         return f"No summary formed: {str(e)}"
 
+def query_vector_store(jd, index_name, pc, embedding):
+    try:
+        user_chunks = data_fetching(jd, index_name, pc, embedding)
+        return user_chunks
+
+    except Exception as e:
+        return "error" + str(e)
+
 def research(c_name):
     try:
         if not c_name or not c_name.strip():
@@ -89,12 +109,24 @@ def research(c_name):
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
             return "Missing API key: set GEMINI_API_KEY or GOOGLE_API_KEY"
-        llm = ChatGoogleGenerativeAI(
-            api_key=api_key,
-            model="gemini-1.5-flash",
-            timeout=30,
-            max_retries=2
-        )
+        
+        models = "gemini-2.5-pro"
+        llm = None
+        
+        for model in models:
+            try:
+                llm = ChatGoogleGenerativeAI(
+                    api_key=api_key,
+                    model=model,
+                    timeout=30,
+                    max_retries=2
+                )
+                break
+            except:
+                continue
+        
+        if not llm:
+            return "No available Gemini models found"
             
         prompt = f"""
             You are a company research assistant. Research the company and provide details 

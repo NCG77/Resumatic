@@ -23,7 +23,8 @@ urlpatterns = [
     path('api/upload/', views.upload_and_chunk, name='upload_chunk'),
     path('api/upload-resume/', views.upload_and_chunk, name='upload_resume'),
     path('api/upload-resume', views.upload_and_chunk, name='upload_resume_no_slash'),
-    path('api/query/', views.query_vector_store, name='query'),
     path('api/company_search/', views.company_search, name='company_search'),
     path('api/company_search', views.company_search, name='company_search_no_slash'),
+    path('api/tailor-resume/', views.tailor_resume, name='tailor_resume'),
+    path('api/tailor-resume', views.tailor_resume, name='tailor_resume_no_slash')
 ]
