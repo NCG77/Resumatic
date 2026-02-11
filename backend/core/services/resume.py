@@ -27,23 +27,7 @@ def user_summary(user_context, JD):
         if not api_key:
             return "Missing API key: set GEMINI_API_KEY or GOOGLE_API_KEY"
         
-        models = "gemini-2.5-pro"
-        llm = None
-        
-        for model in models:
-            try:
-                llm = ChatGoogleGenerativeAI(
-                    api_key=api_key,
-                    model=model,
-                    timeout=60,
-                    max_retries=2
-                )
-                break
-            except:
-                continue
-        
-        if not llm:
-            return "No available Gemini models found"
+        model = "gemini-2.5-pro"
             
         if isinstance(user_context, list):
             context = "\n\n".join([item.get('content', '') if isinstance(item, dict) else str(item) for item in user_context])
@@ -86,8 +70,20 @@ def user_summary(user_context, JD):
                     Generate the tailored resume bullet points now:
         """
 
-        response = llm.invoke(prompt)
-        return response.content
+        last_error = None
+        try:
+            llm = ChatGoogleGenerativeAI(
+                api_key=api_key,
+                model=model,
+                timeout=60,
+                max_retries=2
+            )
+            response = llm.invoke(prompt)
+            return response.content
+        except Exception as e:
+            last_error = e
+        
+        return f"No summary formed: All models failed. Last error: {str(last_error)}"
     
     except Exception as e:
         return f"No summary formed: {str(e)}"
@@ -110,23 +106,7 @@ def research(c_name):
         if not api_key:
             return "Missing API key: set GEMINI_API_KEY or GOOGLE_API_KEY"
         
-        models = "gemini-2.5-pro"
-        llm = None
-        
-        for model in models:
-            try:
-                llm = ChatGoogleGenerativeAI(
-                    api_key=api_key,
-                    model=model,
-                    timeout=30,
-                    max_retries=2
-                )
-                break
-            except:
-                continue
-        
-        if not llm:
-            return "No available Gemini models found"
+        model = "gemini-2.5-pro"
             
         prompt = f"""
             You are a company research assistant. Research the company and provide details 
@@ -137,8 +117,20 @@ def research(c_name):
             Company Name: {c_name}
         """
 
-        response = llm.invoke(prompt)
-        return response.content
+        last_error = None
+        try:
+            llm = ChatGoogleGenerativeAI(
+                api_key=api_key,
+                model=model,
+                timeout=30,
+                max_retries=2
+            )
+            response = llm.invoke(prompt)
+            return response.content
+        except Exception as e:
+            last_error = e
+        
+        return f"Error researching company: All models failed. Last error: {str(last_error)}"
     
     except Exception as e:
         return f"Error researching company: {str(e)}"

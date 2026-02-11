@@ -120,7 +120,6 @@ def tailor_resume(request):
             "success": True,
             "tailored_resume": final,
             "suggestions": suggestions[:5] if suggestions else [],
-            "match_score": 75,
             "retrieved_context": [chunk.get('content', '') if isinstance(chunk, dict) else str(chunk) for chunk in user_chunks]
         })
 
