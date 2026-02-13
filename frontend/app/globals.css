@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="%233a2a4a" stroke-width="1.5"/></svg>') 12 12, auto;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: linear-gradient(
+    180deg,
+    #e8d4f1 0%,
+    #d9c9e8 20%,
+    #c9b5de 40%,
+    #b9a5d4 60%,
+    #a995ca 80%,
+    #9985c0 100%
+  );
+  background-attachment: fixed;
+  color: #4a4a6a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    repeating-radial-gradient(
+      circle at 0 0,
+      rgba(0,0,0,0.08),
+      rgba(0,0,0,0.08) 1px,
+      rgba(255,255,255,0.08) 2px,
+      rgba(255,255,255,0.08) 3px
+    );
+  mix-blend-mode: soft-light;
+  opacity: 0.65;
+  z-index: -2;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+  opacity: 0.8;
+  z-index: -1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
