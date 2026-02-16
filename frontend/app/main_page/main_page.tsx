@@ -219,17 +219,6 @@ export default function MainPage() {
 
       {result && (
         <div className={styles.resultSection}>
-          <div className={styles.matchScore}>
-            <h3>Match Score</h3>
-            <div className={styles.scoreBar}>
-              <div
-                className={styles.scoreFill}
-                style={{ width: `${result.match_score}%` }}
-              ></div>
-            </div>
-            <p>{result.match_score}% Match</p>
-          </div>
-
           <div className={styles.suggestions}>
             <h3>Suggestions</h3>
             <ul>
@@ -238,19 +227,6 @@ export default function MainPage() {
               ))}
             </ul>
           </div>
-
-          {result.retrieved_context && result.retrieved_context.length > 0 && (
-            <div className={styles.retrievedContext}>
-              <h3>Retrieved from Your Database</h3>
-              <div className={styles.contextList}>
-                {result.retrieved_context.map((context, index) => (
-                  <div key={index} className={styles.contextItem}>
-                    {context}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className={styles.tailoredResume}>
             <h3>Tailored Resume Points</h3>
@@ -265,6 +241,19 @@ export default function MainPage() {
               Copy to Clipboard
             </button>
           </div>
+
+          {result.retrieved_context && result.retrieved_context.length > 0 && (
+            <div className={styles.retrievedContext}>
+              <h3>Retrieved from Your Database</h3>
+              <div className={styles.contextList}>
+                {result.retrieved_context.map((context, index) => (
+                  <div key={index} className={styles.contextItem}>
+                    {context}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
