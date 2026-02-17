@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./main_page.module.css";
 
@@ -230,7 +231,9 @@ export default function MainPage() {
 
           <div className={styles.tailoredResume}>
             <h3>Tailored Resume Points</h3>
-            <div className={styles.resumeContent}>{result.tailored_resume}</div>
+            <div className={styles.resumeContent}>
+              <ReactMarkdown>{result.tailored_resume}</ReactMarkdown>
+            </div>
             <button
               className={styles.copyButton}
               onClick={() => {

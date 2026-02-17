@@ -64,23 +64,81 @@ def user_summary(user_context, JD):
             )
 
         prompt = f"""
-            You are an expert resume writer.
+            You are an expert ATS resume strategist and hiring manager.
 
-            Generate 8–12 ATS-friendly resume bullet points based on the user's experience and job description.
+            Your task is NOT to rewrite the resume.
+            Your task is to STRATEGICALLY DECIDE what should go into each resume section
+            to maximize shortlisting for this job.
 
-            Candidate Experience:
+            You must analyze both:
+            1. The Job Description
+            2. The Candidate’s actual experience (from vector search)
+
+            --------------------------------------------------
+            STEP 1 — Analyze the Job Description
+            Extract and list:
+            - Core technical skills required
+            - Tools & technologies mentioned
+            - Responsibilities
+            - Keywords ATS will scan for
+            - Experience expectations
+
+            --------------------------------------------------
+            STEP 2 — Analyze Candidate Data
+            From the candidate context:
+            - Identify relevant projects
+            - Identify technical skills actually used
+            - Identify measurable outcomes
+            - Identify leadership / ownership
+            - Ignore irrelevant things
+
+            --------------------------------------------------
+            STEP 3 — Decide what belongs where
+
+            Decide what should go into:
+            A) Experience
+            B) Projects
+            C) Skills
+            D) Achievements
+            E) Tools & Technologies
+
+            Only include things that help THIS job.
+
+            --------------------------------------------------
+            STEP 4 — Generate Optimized Resume Content
+
+            Generate content in this EXACT format:
+
+            EXPERIENCE:
+            • Bullet points here
+
+            PROJECTS:
+            • Bullet points here
+
+            SKILLS:
+            • Comma separated list
+
+            ACHIEVEMENTS:
+            • Bullet points here
+
+            TOOLS & TECHNOLOGIES:
+            • Comma separated list
+
+            Rules:
+            - Use strong action verbs
+            - Quantify wherever possible
+            - Mirror JD keywords naturally
+            - Use ATS-friendly wording
+            - Do not hallucinate skills
+            - Do not include anything not supported by context
+
+            --------------------------------------------------
+            Candidate Context:
             {context}
 
             Job Description:
             {JD}
 
-            Rules:
-            - Start each bullet with a strong action verb
-            - Use numbers when possible
-            - Match JD keywords
-            - Use professional resume tone
-
-            Return bullets only.
             """
 
         return call_gemini(prompt, timeout=60)
@@ -93,24 +151,80 @@ def user_summary(user_context, JD):
 def query_vector_store(jd, index_name, pc, embedding):
     return data_fetching(jd, index_name, pc, embedding)
 
-
-def research(c_name):
+def resume_strategist(jd_analysis, candidate_context):
     try:
-        if not c_name:
-            return "No company name provided."
+        context = "\n".join(
+            chunk["content"] if isinstance(chunk, dict) else str(chunk)
+            for chunk in candidate_context
+        )
 
         prompt = f"""
-            Research the company: {c_name}
+        You are a **Senior FAANG Resume Strategist**.
 
-            Provide:
-            - What the company does
-            - Reputation
-            - Whether it seems legitimate
-            - Should a candidate apply or avoid
-            """
+        Your job is NOT to rewrite.
+        Your job is to "optimize this candidate for THIS job".
 
-        return call_gemini(prompt, timeout=30)
+        You are given:
+        1) A structured Job Description analysis
+        2) The candidate’s real project and experience data
+
+        Your task:
+        Decide what should be:
+        - Highlighted
+        - Reframed
+        - Omitted
+        - Emphasized
+
+        To make this candidate appear as the "perfect match" for the job.
+
+        -----------------------------------
+        JOB DESCRIPTION ANALYSIS:
+        {jd_analysis}
+
+        -----------------------------------
+        CANDIDATE DATA:
+        {context}
+
+        -----------------------------------
+        Produce a structured resume strategy in JSON.
+
+        Use this format:
+
+        {{
+        "experience": [
+            {{
+            "title": "...",
+            "company": "...",
+            "bullets": ["...", "..."]
+            }}
+        ],
+        "projects": [
+            {{
+            "name": "...",
+            "why_it_matters_for_this_job": "...",
+            "bullets": ["...", "..."]
+            }}
+        ],
+        "skills_to_highlight": ["..."],
+        "skills_to_downplay": ["..."],
+        "keywords_for_ATS": ["..."],
+        "achievements": ["..."],
+        "overall_candidate_positioning": "1–2 sentence recruiter summary of how this candidate should be perceived"
+        }}
+
+        Rules:
+        - Use JD keywords heavily
+        - Rewrite everything in recruiter language
+        - Focus on business impact + relevance
+        - Do NOT hallucinate new projects
+        - Only use what exists in the candidate data
+
+        Return ONLY valid JSON.
+        """
+
+        return call_gemini(prompt, timeout=60)
 
     except Exception:
         traceback.print_exc()
-        return "Company research failed."
+        return "Failed to generate resume summary."
+
