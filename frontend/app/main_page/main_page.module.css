@@ -519,7 +519,6 @@
   }
 }
 
-/* Header and Auth Styles */
 .header {
   display: flex;
   justify-content: flex-end;
@@ -595,4 +594,227 @@
   background: linear-gradient(135deg, #8a6aa0, #6a4a80);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(122, 90, 144, 0.3);
+}
+
+/* New Styles for Strategy Display */
+.input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid rgba(201, 169, 217, 0.4);
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #3a2a4a;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #9a7ab0;
+  box-shadow: 0 0 0 3px rgba(154, 122, 176, 0.15);
+}
+
+.companyBadge {
+  background: linear-gradient(135deg, #e8def6, #f3c1cf);
+  padding: 12px 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  color: #3a2a4a;
+  font-size: 0.95rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+  background: rgba(232, 222, 246, 0.3);
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #6a5a7a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.activeTab {
+  background: white;
+  color: #3a2a4a;
+  box-shadow: 0 2px 8px rgba(140, 100, 180, 0.15);
+}
+
+.strategySection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.positioningCard {
+  background: linear-gradient(135deg, #9a7ab0, #7a5a90);
+  color: white;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(122, 90, 144, 0.3);
+}
+
+.positioningCard h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.positioningCard p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+.strategyCard {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(219, 190, 240, 0.3);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 4px 16px rgba(140, 100, 180, 0.1);
+}
+
+.strategyCard h3 {
+  margin: 0 0 16px 0;
+  color: #3a2a4a;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.strategyCard ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.strategyCard li {
+  margin-bottom: 10px;
+  color: #4a3a5a;
+  line-height: 1.5;
+}
+
+.experienceItem,
+.projectItem {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(219, 190, 240, 0.3);
+}
+
+.experienceItem:last-child,
+.projectItem:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.experienceItem h4,
+.projectItem h4 {
+  margin: 0 0 12px 0;
+  color: #5a4a6a;
+  font-size: 1.05rem;
+}
+
+.projectReason {
+  font-style: italic;
+  color: #8a6a9a;
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+}
+
+.skillsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.skillCard {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(219, 190, 240, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.skillCard h3 {
+  margin: 0 0 16px 0;
+  color: #3a2a4a;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.highlightTag {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.downplayTag {
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.atsTag {
+  background: linear-gradient(135deg, #cce5ff, #b8daff);
+  color: #004085;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.rawStrategy {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(219, 190, 240, 0.3);
+  border-radius: 16px;
+  padding: 25px;
+}
+
+.analysisSection {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(219, 190, 240, 0.3);
+  border-radius: 16px;
+  padding: 25px;
+}
+
+.analysisSection h3 {
+  margin: 0 0 16px 0;
+  color: #3a2a4a;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .skillsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tabs {
+    flex-direction: column;
+  }
 }

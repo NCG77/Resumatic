@@ -4,8 +4,83 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 import os
 import traceback
+import requests
+from bs4 import BeautifulSoup
+import re
 
 load_dotenv()
+
+
+def scrape_job_posting(url):
+    try:
+        if not url or not url.startswith(('http://', 'https://')):
+            return None
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        for script in soup(["script", "style", "nav", "footer", "header"]):
+            script.decompose()
+        
+        text = soup.get_text(separator='\n', strip=True)
+        
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        cleaned_text = '\n'.join(lines)
+        
+        if len(cleaned_text) > 8000:
+            cleaned_text = cleaned_text[:8000]
+        
+        return cleaned_text
+        
+    except Exception as e:
+        print(f"Web scraping error: {e}")
+        return None
+
+
+def scrape_company_info(company_name):
+    try:
+        if not company_name:
+            return None
+        
+        search_url = f"https://html.duckduckgo.com/html/?q={company_name}+company+about+careers"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(search_url, headers=headers, timeout=15)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        results = []
+        for result in soup.select('.result__snippet')[:5]:
+            snippet = result.get_text(strip=True)
+            if snippet:
+                results.append(snippet)
+        
+        return '\n'.join(results) if results else None
+        
+    except Exception as e:
+        print(f"Company search error: {e}")
+        return None
+
+
+def extract_company_from_jd(jd):
+    try:
+        prompt = f"""Extract only the company name from this job description. 
+        Return ONLY the company name, nothing else. If no company name is found, return 'Unknown'.
+        
+        Job Description:
+        {jd[:2000]}
+        """
+        return call_gemini(prompt, timeout=15)
+    except:
+        return "Unknown"
 
 def data_fetching(query, index_name, pc, embedding):
     try:
@@ -72,7 +147,7 @@ def user_summary(user_context, JD):
 
             You must analyze both:
             1. The Job Description
-            2. The Candidate’s actual experience (from vector search)
+            2. The Candidate's actual experience (from vector search)
 
             --------------------------------------------------
             STEP 1 — Analyze the Job Description
@@ -151,12 +226,25 @@ def user_summary(user_context, JD):
 def query_vector_store(jd, index_name, pc, embedding):
     return data_fetching(jd, index_name, pc, embedding)
 
-def resume_strategist(jd_analysis, candidate_context):
+def resume_strategist(jd_analysis, candidate_context, company_info=None):
     try:
         context = "\n".join(
             chunk["content"] if isinstance(chunk, dict) else str(chunk)
             for chunk in candidate_context
         )
+
+        company_section = ""
+        if company_info:
+            company_section = f"""
+        -----------------------------------
+        COMPANY RESEARCH (from web):
+        {company_info}
+        
+        Use this to:
+        - Align language with company culture
+        - Highlight relevant domain experience
+        - Match company values in positioning
+        """
 
         prompt = f"""
         You are a **Senior FAANG Resume Strategist**.
@@ -166,8 +254,8 @@ def resume_strategist(jd_analysis, candidate_context):
 
         You are given:
         1) A structured Job Description analysis
-        2) The candidate’s real project and experience data
-
+        2) The candidate's real project and experience data
+        3) Company research insights (if available)
         Your task:
         Decide what should be:
         - Highlighted
@@ -184,7 +272,7 @@ def resume_strategist(jd_analysis, candidate_context):
         -----------------------------------
         CANDIDATE DATA:
         {context}
-
+        {company_section}
         -----------------------------------
         Produce a structured resume strategy in JSON.
 
@@ -209,7 +297,8 @@ def resume_strategist(jd_analysis, candidate_context):
         "skills_to_downplay": ["..."],
         "keywords_for_ATS": ["..."],
         "achievements": ["..."],
-        "overall_candidate_positioning": "1–2 sentence recruiter summary of how this candidate should be perceived"
+        "overall_candidate_positioning": "1–2 sentence recruiter summary of how this candidate should be perceived",
+        "company_alignment_tips": ["tip1", "tip2"]
         }}
 
         Rules:
@@ -218,13 +307,13 @@ def resume_strategist(jd_analysis, candidate_context):
         - Focus on business impact + relevance
         - Do NOT hallucinate new projects
         - Only use what exists in the candidate data
+        - Include company-specific alignment tips if company info is available
 
         Return ONLY valid JSON.
         """
 
-        return call_gemini(prompt, timeout=60)
+        return call_gemini(prompt, timeout=90)
 
     except Exception:
         traceback.print_exc()
-        return "Failed to generate resume summary."
-
+        return "Failed to generate resume strategy."

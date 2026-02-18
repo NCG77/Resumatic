@@ -1,21 +1,14 @@
-# Core framework
 django==5.2.11
 django-cors-headers
-
-# LangChain ecosystem
 langchain
 langchain-community
 langchain-google-genai
 langchain-pinecone
 langchain-huggingface
 langchain-text-splitters
-
-# Vector store & embeddings
 pinecone
 sentence-transformers
-
-# PDF processing
 pypdf
-
-# Environment & utilities
+requests
+beautifulsoup4
 python-dotenv

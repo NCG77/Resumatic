@@ -104,24 +104,49 @@ def tailor_resume(request):
         data = json.loads(request.body)
         jd = data.get("jd")
         index_name = data.get("index_name")
+        job_url = data.get("job_url", "")
 
         if not jd or not index_name:
             return JsonResponse({"error": "jd and index_name required"}, status=400)
 
+        scraped_jd = None
+        if job_url:
+            scraped_jd = resume.scrape_job_posting(job_url)
+            if scraped_jd:
+                jd = f"{jd}\n\n--- Additional Details from Job Posting ---\n{scraped_jd}"
+
+        company_name = resume.extract_company_from_jd(jd)
+        company_info = None
+        if company_name and company_name.lower() != "unknown":
+            company_info = resume.scrape_company_info(company_name)
+
         user_chunks = resume.query_vector_store(jd, index_name, pc, embedding)
-        final = resume.user_summary(user_chunks, jd)
         
-        suggestions = []
-        if isinstance(final, str) and final.startswith("•"):
-            suggestions = [line.strip() for line in final.split("\n") if line.strip().startswith("•")]
-            suggestions = [s.lstrip("•").strip() for s in suggestions]
+        jd_analysis = resume.user_summary(user_chunks, jd)
+        
+        strategy = resume.resume_strategist(jd_analysis, user_chunks, company_info)
+        
+        strategy_json = None
+        try:
+            clean_strategy = strategy
+            if "```json" in strategy:
+                clean_strategy = strategy.split("```json")[1].split("```")[0].strip()
+            elif "```" in strategy:
+                clean_strategy = strategy.split("```")[1].split("```")[0].strip()
+            strategy_json = json.loads(clean_strategy)
+        except:
+            strategy_json = None
 
         return JsonResponse({
             "success": True,
-            "tailored_resume": final,
-            "suggestions": suggestions[:5] if suggestions else [],
+            "jd_analysis": jd_analysis,
+            "strategy": strategy_json if strategy_json else strategy,
+            "strategy_raw": strategy,
+            "company_info": company_name if company_name and company_name.lower() != "unknown" else None,
             "retrieved_context": [chunk.get('content', '') if isinstance(chunk, dict) else str(chunk) for chunk in user_chunks]
         })
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=500)

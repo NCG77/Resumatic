@@ -6,10 +6,34 @@ import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./main_page.module.css";
 
+interface Experience {
+  title: string;
+  company: string;
+  bullets: string[];
+}
+
+interface Project {
+  name: string;
+  why_it_matters_for_this_job: string;
+  bullets: string[];
+}
+
+interface ResumeStrategy {
+  experience: Experience[];
+  projects: Project[];
+  skills_to_highlight: string[];
+  skills_to_downplay: string[];
+  keywords_for_ATS: string[];
+  achievements: string[];
+  overall_candidate_positioning: string;
+  company_alignment_tips?: string[];
+}
+
 interface TailoredResult {
-  tailored_resume: string;
-  suggestions: string[];
-  match_score: number;
+  jd_analysis: string;
+  strategy: ResumeStrategy | string;
+  strategy_raw: string;
+  company_info: string | null;
   retrieved_context: string[];
 }
 
@@ -18,11 +42,15 @@ export default function MainPage() {
   const [resumeFileName, setResumeFileName] = useState("");
   const [indexName, setIndexName] = useState("");
   const [jobDescription, setJobDescription] = useState("");
+  const [jobUrl, setJobUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<TailoredResult | null>(null);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<
+    "strategy" | "analysis" | "context"
+  >("strategy");
   const { user, loading: authLoading, logout } = useAuth();
 
   const handleUploadResume = async () => {
@@ -78,6 +106,7 @@ export default function MainPage() {
         body: JSON.stringify({
           jd: jobDescription,
           index_name: indexName,
+          job_url: jobUrl,
         }),
       });
 
@@ -86,8 +115,15 @@ export default function MainPage() {
       }
 
       const data = await response.json();
+      console.log("API Response:", data);
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       setResult(data);
     } catch (err) {
+      console.error("Error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
@@ -199,6 +235,17 @@ export default function MainPage() {
 
       <div className={styles.inputSection}>
         <div className={styles.formGroup}>
+          <label htmlFor="jobUrl">Job Posting URL (Optional)</label>
+          <input
+            id="jobUrl"
+            type="url"
+            value={jobUrl}
+            onChange={(e) => setJobUrl(e.target.value)}
+            placeholder="https://example.com/job-posting (for web scraping)"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
           <label htmlFor="jobDescription">Job Description</label>
           <textarea
             id="jobDescription"
@@ -214,38 +261,201 @@ export default function MainPage() {
           disabled={loading}
           className={styles.button}
         >
-          {loading ? "Tailoring Resume..." : "Tailor Resume"}
+          {loading ? "Analyzing & Strategizing..." : "Generate Resume Strategy"}
         </button>
+        {error && <div className={styles.error}>{error}</div>}
       </div>
 
       {result && (
         <div className={styles.resultSection}>
-          <div className={styles.suggestions}>
-            <h3>Suggestions</h3>
-            <ul>
-              {result.suggestions.map((suggestion, index) => (
-                <li key={index}>{suggestion}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className={styles.tailoredResume}>
-            <h3>Tailored Resume Points</h3>
-            <div className={styles.resumeContent}>
-              <ReactMarkdown>{result.tailored_resume}</ReactMarkdown>
-            </div>
-            <button
-              className={styles.copyButton}
-              onClick={() => {
-                navigator.clipboard.writeText(result.tailored_resume);
-                alert("Resume copied to clipboard!");
-              }}
+          <details
+            style={{
+              marginBottom: "20px",
+              padding: "10px",
+              background: "#f0f0f0",
+              borderRadius: "8px",
+            }}
+          >
+            <summary>Debug: Raw API Response</summary>
+            <pre
+              style={{ overflow: "auto", maxHeight: "200px", fontSize: "12px" }}
             >
-              Copy to Clipboard
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </details>
+
+          {result.company_info && (
+            <div className={styles.companyBadge}>
+              Company Detected: <strong>{result.company_info}</strong>
+            </div>
+          )}
+
+          <div className={styles.tabs}>
+            <button
+              className={`${styles.tab} ${activeTab === "strategy" ? styles.activeTab : ""}`}
+              onClick={() => setActiveTab("strategy")}
+            >
+              Resume Strategy
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === "analysis" ? styles.activeTab : ""}`}
+              onClick={() => setActiveTab("analysis")}
+            >
+              JD Analysis
+            </button>
+            <button
+              className={`${styles.tab} ${activeTab === "context" ? styles.activeTab : ""}`}
+              onClick={() => setActiveTab("context")}
+            >
+              Retrieved Context
             </button>
           </div>
 
-          {result.retrieved_context && result.retrieved_context.length > 0 && (
+          {activeTab === "strategy" && (
+            <div className={styles.strategySection}>
+              {result.strategy &&
+              typeof result.strategy === "object" &&
+              result.strategy !== null ? (
+                <>
+                  <div className={styles.positioningCard}>
+                    <h3>Candidate Positioning</h3>
+                    <p>{result.strategy.overall_candidate_positioning}</p>
+                  </div>
+
+                  {result.strategy.experience?.length > 0 && (
+                    <div className={styles.strategyCard}>
+                      <h3>Experience</h3>
+                      {result.strategy.experience.map((exp, idx) => (
+                        <div key={idx} className={styles.experienceItem}>
+                          <h4>
+                            {exp.title} @ {exp.company}
+                          </h4>
+                          <ul>
+                            {exp.bullets.map((bullet, bIdx) => (
+                              <li key={bIdx}>{bullet}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {result.strategy.projects?.length > 0 && (
+                    <div className={styles.strategyCard}>
+                      <h3>Projects</h3>
+                      {result.strategy.projects.map((proj, idx) => (
+                        <div key={idx} className={styles.projectItem}>
+                          <h4>{proj.name}</h4>
+                          <p className={styles.projectReason}>
+                            {proj.why_it_matters_for_this_job}
+                          </p>
+                          <ul>
+                            {proj.bullets.map((bullet, bIdx) => (
+                              <li key={bIdx}>{bullet}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className={styles.skillsGrid}>
+                    <div className={styles.skillCard}>
+                      <h3>Skills to Highlight</h3>
+                      <div className={styles.tagList}>
+                        {result.strategy.skills_to_highlight?.map(
+                          (skill, idx) => (
+                            <span key={idx} className={styles.highlightTag}>
+                              {skill}
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.skillCard}>
+                      <h3>Skills to Downplay</h3>
+                      <div className={styles.tagList}>
+                        {result.strategy.skills_to_downplay?.map(
+                          (skill, idx) => (
+                            <span key={idx} className={styles.downplayTag}>
+                              {skill}
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.strategyCard}>
+                    <h3>ATS Keywords</h3>
+                    <div className={styles.tagList}>
+                      {result.strategy.keywords_for_ATS?.map((keyword, idx) => (
+                        <span key={idx} className={styles.atsTag}>
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {result.strategy.achievements?.length > 0 && (
+                    <div className={styles.strategyCard}>
+                      <h3>Achievements</h3>
+                      <ul>
+                        {result.strategy.achievements.map(
+                          (achievement, idx) => (
+                            <li key={idx}>{achievement}</li>
+                          ),
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {result.strategy.company_alignment_tips &&
+                    result.strategy.company_alignment_tips.length > 0 && (
+                      <div className={styles.strategyCard}>
+                        <h3>Company Alignment Tips</h3>
+                        <ul>
+                          {result.strategy.company_alignment_tips.map(
+                            (tip, idx) => (
+                              <li key={idx}>{tip}</li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                </>
+              ) : (
+                <div className={styles.rawStrategy}>
+                  <ReactMarkdown>
+                    {result.strategy_raw ||
+                      (typeof result.strategy === "string"
+                        ? result.strategy
+                        : "No strategy generated")}
+                  </ReactMarkdown>
+                </div>
+              )}
+              <button
+                className={styles.copyButton}
+                onClick={() => {
+                  navigator.clipboard.writeText(result.strategy_raw || "");
+                  alert("Strategy copied to clipboard!");
+                }}
+              >
+                Copy Strategy to Clipboard
+              </button>
+            </div>
+          )}
+
+          {activeTab === "analysis" && (
+            <div className={styles.analysisSection}>
+              <h3>Job Description Analysis</h3>
+              <div className={styles.resumeContent}>
+                <ReactMarkdown>{result.jd_analysis}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "context" && result.retrieved_context?.length > 0 && (
             <div className={styles.retrievedContext}>
               <h3>Retrieved from Your Database</h3>
               <div className={styles.contextList}>
