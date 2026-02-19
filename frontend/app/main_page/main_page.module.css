@@ -234,6 +234,19 @@
   font-weight: 500;
 }
 
+.loadingHint {
+  text-align: center;
+  color: #6a5a7a;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 .resultSection {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);

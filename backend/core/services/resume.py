@@ -311,8 +311,10 @@ def resume_strategist(jd_analysis, candidate_context, company_info=None):
 
         Return ONLY valid JSON.
         """
+        ret = call_gemini(prompt, timeout=120)
 
-        return call_gemini(prompt, timeout=90)
+        print("So this the output: " + ret)
+        return ret
 
     except Exception:
         traceback.print_exc()

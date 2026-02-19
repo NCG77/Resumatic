@@ -9,14 +9,33 @@ from django.views.decorators.csrf import csrf_exempt
 import os
 import tempfile
 import json
+import re
+import traceback
 from dotenv import load_dotenv
 from .services import resume
 
 load_dotenv()
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-embedding = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+
+# Initialize Pinecone and HuggingFace with error handling
+pc = None
+embedding = None
+
+def get_pc():
+    global pc
+    if pc is None:
+        api_key = os.getenv("PINECONE_API_KEY")
+        if not api_key:
+            raise ValueError("PINECONE_API_KEY not set")
+        pc = Pinecone(api_key=api_key)
+    return pc
+
+def get_embedding():
+    global embedding
+    if embedding is None:
+        embedding = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+    return embedding
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -42,19 +61,23 @@ def upload_and_chunk(request):
 
         file_name = uploaded_file.name.replace(".pdf", "").replace(" ", "-").lower()
         index_name = f"resume-{file_name}"
-        existing = [i["name"] for i in pc.list_indexes()]
+        
+        pinecone_client = get_pc()
+        embedding_model = get_embedding()
+        
+        existing = [i["name"] for i in pinecone_client.list_indexes()]
         if index_name not in existing:
-            pc.create_index(
+            pinecone_client.create_index(
                 name=index_name,
                 dimension=384,
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
 
-        index = pc.Index(index_name)
+        index = pinecone_client.Index(index_name)
         vectorstore = PineconeVectorStore(
             index=index,
-            embedding=embedding
+            embedding=embedding_model
         )
 
         vectorstore.add_documents(chunks)
@@ -66,7 +89,6 @@ def upload_and_chunk(request):
         })
 
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -109,6 +131,9 @@ def tailor_resume(request):
         if not jd or not index_name:
             return JsonResponse({"error": "jd and index_name required"}, status=400)
 
+        pinecone_client = get_pc()
+        embedding_model = get_embedding()
+
         scraped_jd = None
         if job_url:
             scraped_jd = resume.scrape_job_posting(job_url)
@@ -120,7 +145,7 @@ def tailor_resume(request):
         if company_name and company_name.lower() != "unknown":
             company_info = resume.scrape_company_info(company_name)
 
-        user_chunks = resume.query_vector_store(jd, index_name, pc, embedding)
+        user_chunks = resume.query_vector_store(jd, index_name, pinecone_client, embedding_model)
         
         jd_analysis = resume.user_summary(user_chunks, jd)
         
@@ -128,13 +153,24 @@ def tailor_resume(request):
         
         strategy_json = None
         try:
-            clean_strategy = strategy
-            if "```json" in strategy:
-                clean_strategy = strategy.split("```json")[1].split("```")[0].strip()
-            elif "```" in strategy:
-                clean_strategy = strategy.split("```")[1].split("```")[0].strip()
+            clean_strategy = strategy.strip() if strategy else ""
+            
+            # Handle various markdown code block formats
+            json_block_match = re.search(r'```(?:json)?\s*\n?([\s\S]*?)```', clean_strategy)
+            if json_block_match:
+                clean_strategy = json_block_match.group(1).strip()
+            else:
+                # Try to find JSON object directly if no code block
+                json_start = clean_strategy.find('{')
+                json_end = clean_strategy.rfind('}')
+                if json_start != -1 and json_end != -1:
+                    clean_strategy = clean_strategy[json_start:json_end + 1]
+            
             strategy_json = json.loads(clean_strategy)
-        except:
+            print("Successfully parsed strategy JSON")
+        except Exception as parse_error:
+            print(f"JSON parse error: {parse_error}")
+            print(f"Raw strategy (first 500 chars): {strategy[:500] if strategy else 'None'}")
             strategy_json = None
 
         return JsonResponse({
@@ -147,6 +183,5 @@ def tailor_resume(request):
         })
 
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=500)

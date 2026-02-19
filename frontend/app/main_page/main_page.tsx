@@ -98,6 +98,10 @@ export default function MainPage() {
     setResult(null);
 
     try {
+      // Create an AbortController with a 5-minute timeout for long LLM processing
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+
       const response = await fetch("/api/tailor-resume", {
         method: "POST",
         headers: {
@@ -108,23 +112,45 @@ export default function MainPage() {
           index_name: indexName,
           job_url: jobUrl,
         }),
+        signal: controller.signal,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to tailor resume");
+      clearTimeout(timeoutId);
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text.substring(0, 500));
+        throw new Error(
+          `Server returned non-JSON response. Status: ${response.status}. Make sure the backend server is running on port 8000.`,
+        );
       }
 
       const data = await response.json();
       console.log("API Response:", data);
+      console.log("Strategy type:", typeof data.strategy);
+      console.log("Strategy value:", data.strategy);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to tailor resume");
+      }
 
       if (data.error) {
         throw new Error(data.error);
       }
 
       setResult(data);
+      console.log("Result set successfully");
     } catch (err) {
       console.error("Error:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      if (err instanceof Error && err.name === "AbortError") {
+        setError(
+          "Request timed out. The AI is taking longer than expected. Please try again.",
+        );
+      } else {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      }
     } finally {
       setLoading(false);
     }
@@ -263,6 +289,12 @@ export default function MainPage() {
         >
           {loading ? "Analyzing & Strategizing..." : "Generate Resume Strategy"}
         </button>
+        {loading && (
+          <p className={styles.loadingHint}>
+            This may take 1-2 minutes as the AI analyzes your resume and crafts
+            a strategy...
+          </p>
+        )}
         {error && <div className={styles.error}>{error}</div>}
       </div>
 
