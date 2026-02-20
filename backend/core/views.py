@@ -15,8 +15,6 @@ from dotenv import load_dotenv
 from .services import resume
 
 load_dotenv()
-
-# Initialize Pinecone and HuggingFace with error handling
 pc = None
 embedding = None
 
@@ -146,21 +144,16 @@ def tailor_resume(request):
             company_info = resume.scrape_company_info(company_name)
 
         user_chunks = resume.query_vector_store(jd, index_name, pinecone_client, embedding_model)
-        
         jd_analysis = resume.user_summary(user_chunks, jd)
-        
         strategy = resume.resume_strategist(jd_analysis, user_chunks, company_info)
         
         strategy_json = None
         try:
             clean_strategy = strategy.strip() if strategy else ""
-            
-            # Handle various markdown code block formats
             json_block_match = re.search(r'```(?:json)?\s*\n?([\s\S]*?)```', clean_strategy)
             if json_block_match:
                 clean_strategy = json_block_match.group(1).strip()
             else:
-                # Try to find JSON object directly if no code block
                 json_start = clean_strategy.find('{')
                 json_end = clean_strategy.rfind('}')
                 if json_start != -1 and json_end != -1:

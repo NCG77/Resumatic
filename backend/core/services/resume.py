@@ -311,7 +311,7 @@ def resume_strategist(jd_analysis, candidate_context, company_info=None):
 
         Return ONLY valid JSON.
         """
-        ret = call_gemini(prompt, timeout=120)
+        ret = call_gemini(prompt, timeout=500)
 
         print("So this the output: " + ret)
         return ret

@@ -98,11 +98,10 @@ export default function MainPage() {
     setResult(null);
 
     try {
-      // Create an AbortController with a 5-minute timeout for long LLM processing
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+      const timeoutId = setTimeout(() => controller.abort(), 900000);
 
-      const response = await fetch("/api/tailor-resume", {
+      const response = await fetch("/api/tailor-resume/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +116,6 @@ export default function MainPage() {
 
       clearTimeout(timeoutId);
 
-      // Check if response is JSON
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
@@ -129,8 +127,6 @@ export default function MainPage() {
 
       const data = await response.json();
       console.log("API Response:", data);
-      console.log("Strategy type:", typeof data.strategy);
-      console.log("Strategy value:", data.strategy);
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to tailor resume");
