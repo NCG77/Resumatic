@@ -6,26 +6,10 @@ Resumatic is an AI-powered application that tailors your resume to match job des
 ## Features
 - **Resume Input**: Paste your complete resume
 - **Job Description Input**: Paste the target job posting
-- **AI-Powered Analysis**: Uses OpenAI's GPT to analyze and suggest improvements
+- **AI-Powered Analysis**: Uses Gemini API to analyze and suggest improvements
 - **Tailored Output**: Generates a customized version of your resume
-- **Match Scoring**: Shows how well your resume matches the job (0-100%)
+- **Web Scrapping**: Extracts key requirements from job url 
 - **Actionable Suggestions**: Provides specific recommendations for improvement
-
-## Project Structure
-```
-Resumatic/
-├── frontend/           # Next.js React frontend
-│   └── app/
-│       └── Pages/
-│           └── main_page/
-│               ├── main_page.tsx      # Main resume tailoring component
-│               └── main_page.module.css # Styling
-└── backend/           # Flask Python backend
-    ├── app.py              # Flask API server
-    ├── resume_tailor.py    # Core LangChain logic
-    ├── requirements.txt    # Python dependencies
-    └── .env.example        # Environment variables template
-```
 
 ## Setup Instructions
 
@@ -39,9 +23,9 @@ Resumatic/
 
 2. **Configure Environment Variables**
    - Copy `.env.example` to `.env`
-   - Add your OpenAI API key:
+   - Add your Gemini AI API key:
      ```bash
-     OPENAI_API_KEY=sk-your-api-key-here
+     AI_API_KEY=your-gemini-api-key-here
      ```
 
 3. **Run the Backend Server**
@@ -80,19 +64,6 @@ Resumatic/
    - **Tailored Resume**: Your optimized resume
 6. Copy the tailored resume to your clipboard
 
-## API Endpoints
-
-### POST /api/tailor-resume
-Tailor a resume to a job description.
-
-**Request:**
-```json
-{
-  "resume": "Your full resume text",
-  "job_description": "The job posting text"
-}
-```
-
 **Response:**
 ```json
 {
@@ -102,19 +73,9 @@ Tailor a resume to a job description.
     "Suggestion 2",
     "..."
   ],
-  "match_score": 85
 }
 ```
 
-### GET /api/health
-Health check endpoint.
-
-**Response:**
-```json
-{
-  "status": "healthy"
-}
-```
 
 ## How It Works
 
@@ -142,7 +103,7 @@ Health check endpoint.
 
 - Node.js 18+ (for frontend)
 - Python 3.8+ (for backend)
-- OpenAI API key (get one at https://platform.openai.com)
+- Gemini AI API key (get one at https://platform.google.com)
 
 ## Tips for Best Results
 
@@ -154,8 +115,8 @@ Health check endpoint.
 
 ## Troubleshooting
 
-- **API Connection Error**: Ensure backend is running on port 5000
-- **OpenAI Error**: Check your API key and account balance
+- **API Connection Error**: Ensure backend is running on correct port
+- **Gemini Error**: Check your API key and account balance
 - **Parsing Errors**: Try with simpler, well-formatted resume and job description text
 
 ## Future Enhancements

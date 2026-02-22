@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+export const maxDuration = 120;
 
-export const maxDuration = 120; // 2 minutes for upload
+const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     console.log("[Upload API Route] Forwarding to Django");
 
-    const response = await fetch("http://127.0.0.1:8000/api/upload-resume/", {
+    const response = await fetch(`${BACKEND_URL}/api/upload-resume/`, {
       method: "POST",
       body: formData,
     });

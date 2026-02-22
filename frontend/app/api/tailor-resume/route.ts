@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+export const maxDuration = 300;
 
-// Increase the max duration for this route (in seconds)
-export const maxDuration = 300; // 5 minutes
+const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       jd_length: body.jd?.length,
     });
 
-    const response = await fetch("http://127.0.0.1:8000/api/tailor-resume/", {
+    const response = await fetch(`${BACKEND_URL}/api/tailor-resume/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
