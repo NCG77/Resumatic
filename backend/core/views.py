@@ -146,8 +146,8 @@ def tailor_resume(request):
         user_chunks = resume.query_vector_store(jd, index_name, pinecone_client, embedding_model)
         jd_analysis = resume.user_summary(user_chunks, jd)
         strategy = resume.resume_strategist(jd_analysis, user_chunks, company_info)
-        
         strategy_json = None
+
         try:
             clean_strategy = strategy.strip() if strategy else ""
             json_block_match = re.search(r'```(?:json)?\s*\n?([\s\S]*?)```', clean_strategy)
@@ -160,7 +160,6 @@ def tailor_resume(request):
                     clean_strategy = clean_strategy[json_start:json_end + 1]
             
             strategy_json = json.loads(clean_strategy)
-            print("Successfully parsed strategy JSON")
         except Exception as parse_error:
             print(f"JSON parse error: {parse_error}")
             print(f"Raw strategy (first 500 chars): {strategy[:500] if strategy else 'None'}")
@@ -169,7 +168,7 @@ def tailor_resume(request):
         return JsonResponse({
             "success": True,
             "jd_analysis": jd_analysis,
-            "strategy": strategy_json if strategy_json else strategy,
+            "strategy": strategy_json,
             "strategy_raw": strategy,
             "company_info": company_name if company_name and company_name.lower() != "unknown" else None,
             "retrieved_context": [chunk.get('content', '') if isinstance(chunk, dict) else str(chunk) for chunk in user_chunks]

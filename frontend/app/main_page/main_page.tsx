@@ -101,7 +101,7 @@ export default function MainPage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 900000);
 
-      const response = await fetch("/api/tailor-resume/", {
+      const response = await fetch("/api/tailor-resume", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,25 +115,28 @@ export default function MainPage() {
       });
 
       clearTimeout(timeoutId);
+      console.log("Frontend Received Response:", response);
 
       const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
+
+      if (
+        !response.ok &&
+        (!contentType || !contentType.includes("application/json"))
+      ) {
         const text = await response.text();
-        console.error("Non-JSON response:", text.substring(0, 500));
+        console.error("Server error:", response.status, text.substring(0, 500));
         throw new Error(
-          `Server returned non-JSON response. Status: ${response.status}. Make sure the backend server is running on port 8000.`,
+          response.status === 500
+            ? "Backend server error. Check the backend terminal for details."
+            : `Server error (${response.status}): ${text.substring(0, 100)}`,
         );
       }
 
       const data = await response.json();
       console.log("API Response:", data);
 
-      if (!response.ok) {
+      if (!response.ok || data.error) {
         throw new Error(data.error || "Failed to tailor resume");
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
       }
 
       setResult(data);
@@ -263,7 +266,7 @@ export default function MainPage() {
             type="url"
             value={jobUrl}
             onChange={(e) => setJobUrl(e.target.value)}
-            placeholder="https://example.com/job-posting (for web scraping)"
+            placeholder="(link for web scraping)"
             className={styles.input}
           />
         </div>
@@ -296,22 +299,6 @@ export default function MainPage() {
 
       {result && (
         <div className={styles.resultSection}>
-          <details
-            style={{
-              marginBottom: "20px",
-              padding: "10px",
-              background: "#f0f0f0",
-              borderRadius: "8px",
-            }}
-          >
-            <summary>Debug: Raw API Response</summary>
-            <pre
-              style={{ overflow: "auto", maxHeight: "200px", fontSize: "12px" }}
-            >
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </details>
-
           {result.company_info && (
             <div className={styles.companyBadge}>
               Company Detected: <strong>{result.company_info}</strong>

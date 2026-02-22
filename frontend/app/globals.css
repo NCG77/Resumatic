@@ -26,6 +26,7 @@ html,
 body {
   width: 100%;
   height: 100%;
+  color-scheme: light;
 }
 
 body {
@@ -73,7 +74,6 @@ body::after {
   z-index: -1;
 }
 
-/* Modern scrollbar styling */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(155, 123, 171, 0.4) transparent;
@@ -98,7 +98,6 @@ body::after {
   background: rgba(155, 123, 171, 0.6);
 }
 
-/* Hide scrollbar but allow scroll */
 .hide-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -108,9 +107,55 @@ body::after {
   display: none;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+  }
+
+  html {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="%23c9b8d9" stroke-width="1.5"/></svg>') 12 12, auto;
+  }
+
+  body {
+    background: linear-gradient(
+      180deg,
+      #1a1422 0%,
+      #1e1828 20%,
+      #221c2e 40%,
+      #262034 60%,
+      #2a243a 80%,
+      #2e2840 100%
+    );
+    color: #c9b8d9;
+  }
+
+  body::before {
+    background-image: 
+      repeating-radial-gradient(
+        circle at 0 0,
+        rgba(255,255,255,0.05),
+        rgba(255,255,255,0.05) 1px,
+        rgba(0,0,0,0.05) 2px,
+        rgba(0,0,0,0.05) 3px
+      );
+    mix-blend-mode: soft-light;
+    opacity: 0.4;
+  }
+
+  body::after {
+    opacity: 0.5;
+  }
+
+  * {
+    scrollbar-color: rgba(175, 143, 191, 0.4) transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(175, 143, 191, 0.4);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(175, 143, 191, 0.6);
   }
 }

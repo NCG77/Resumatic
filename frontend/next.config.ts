@@ -1,14 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://127.0.0.1:8000/api/:path*",
-      },
-    ];
-  },
+  // API routes now handle proxying to Django backend
+  // See app/api/tailor-resume/route.ts and app/api/upload-resume/route.ts
 };
 
 export default nextConfig;

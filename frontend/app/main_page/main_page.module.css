@@ -609,7 +609,6 @@
   box-shadow: 0 4px 12px rgba(122, 90, 144, 0.3);
 }
 
-/* New Styles for Strategy Display */
 .input {
   width: 100%;
   padding: 14px 18px;
@@ -628,11 +627,10 @@
 }
 
 .companyBadge {
-  background: linear-gradient(135deg, #e8def6, #f3c1cf);
+  background: linear-gradient(135deg, rgba(243, 193, 207, 0.2), rgba(232, 222, 246, 0.2));
   padding: 12px 20px;
   border-radius: 12px;
   margin-bottom: 20px;
-  color: #3a2a4a;
   font-size: 0.95rem;
 }
 
