@@ -1,4 +1,5 @@
 # Resumatic - Resume Tailoring Tool
+<img width="1607" height="828" alt="image" src="https://github.com/user-attachments/assets/8001b145-f0af-42d2-89c7-4fe32b8a8d3b" />
 
 ## Overview
 Resumatic is an AI-powered application that tailors your resume to match job descriptions. It analyzes your resume and a job posting, then suggests improvements and provides an optimized version.
