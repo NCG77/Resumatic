@@ -41,6 +41,8 @@ def get_embedding():
 @require_http_methods(["POST"])
 def upload_and_chunk(request):
     try:
+        print("FILES:", request.FILES)
+        print("POST:", request.POST)
         if "file" not in request.FILES:
             return JsonResponse({"error": "No file provided"}, status=400)
 
