@@ -5,10 +5,8 @@ langchain
 langchain-community
 langchain-google-genai
 langchain-pinecone
-langchain-huggingface
 langchain-text-splitters
 pinecone
-sentence-transformers
 pypdf
 requests
 beautifulsoup4

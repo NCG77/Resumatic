@@ -1,7 +1,7 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_pinecone import PineconeVectorStore, Pinecone as LangChainPinecone
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -30,8 +30,10 @@ def get_pc():
 def get_embedding():
     global embedding
     if embedding is None:
-        embedding = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        embedding = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001",
+            google_api_key=api_key
         )
     return embedding
 
@@ -67,7 +69,7 @@ def upload_and_chunk(request):
         if index_name not in existing:
             pinecone_client.create_index(
                 name=index_name,
-                dimension=384,
+                dimension=768,
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
