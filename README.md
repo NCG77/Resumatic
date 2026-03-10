@@ -7,7 +7,7 @@ Resumatic is an AI-powered application that tailors your resume to match job des
 ## Features
 - **Resume Input**: Paste your complete resume
 - **Job Description Input**: Paste the target job posting
-- **AI-Powered Analysis**: Uses Gemini API to analyze and suggest improvements
+- **AI-Powered Analysis**: Uses Gemini API to analyze and suggests improvements
 - **Tailored Output**: Generates a customized version of your resume
 - **Web Scrapping**: Extracts key requirements from job url 
 - **Actionable Suggestions**: Provides specific recommendations for improvement
@@ -80,10 +80,9 @@ Resumatic is an AI-powered application that tailors your resume to match job des
 
 ## How It Works
 
-1. **Requirement Extraction**: The AI analyzes the job description and extracts the top 10 requirements
-2. **Resume Tailoring**: Your resume is reordered and emphasized to match those requirements
-3. **Suggestions Generation**: Specific, actionable recommendations are provided
-4. **Match Scoring**: The AI evaluates how well your resume aligns with the job (0-100%)
+1. **Requirement Extraction**: The AI analyzes the job description and extracts the top 10 requirements from the embeddings from your resume.
+2. **Resume Tailoring**: Your resume is reordered and emphasized to match those requirements mentioned in the JD.
+3. **Suggestions Generation**: Specific, actionable recommendations are provided using AI and web scrapped analysis.
 
 ## Technologies Used
 
@@ -95,16 +94,16 @@ Resumatic is an AI-powered application that tailors your resume to match job des
 
 **Backend:**
 - Python 3.8+
-- Flask
+- Django
 - LangChain
-- OpenAI GPT API
+- Gemini API
 - python-dotenv
 
 ## Prerequisites
 
 - Node.js 18+ (for frontend)
 - Python 3.8+ (for backend)
-- Gemini AI API key (get one at https://platform.google.com)
+- Gemini AI API key
 
 ## Tips for Best Results
 
@@ -114,26 +113,19 @@ Resumatic is an AI-powered application that tailors your resume to match job des
 4. **Keywords**: The tool naturally incorporates job posting keywords into your resume
 5. **Customization**: Review suggestions and the tailored resume before submitting
 
-## Troubleshooting
+## Contribute
 
-- **API Connection Error**: Ensure backend is running on correct port
-- **Gemini Error**: Check your API key and account balance
-- **Parsing Errors**: Try with simpler, well-formatted resume and job description text
-
-## Future Enhancements
-
-- File upload support for resume and job descriptions
+Your contributions are encouraged. Below are some ideas that i would love to integrate someday:
 - Multiple format support (PDF, DOCX, etc.)
 - Save and compare multiple tailored versions
 - Export to various formats
 - Batch processing multiple jobs
-- Interview question generation
-- Skill gap analysis
+- Skill gap analysis and suggestions.
 
 ## License
 
 MIT License
 
-## Support
+## Conclusion
 
-For issues or questions, please check your API keys and ensure both frontend and backend servers are running correctly.
+:)
