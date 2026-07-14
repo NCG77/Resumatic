@@ -61,8 +61,8 @@ def upload_and_chunk(request):
         )
         chunks = splitter.split_documents(docs)
 
-        file_name = uploaded_file.name.replace(".pdf", "").replace(" ", "-").lower()
-        index_name = f"resume-{file_name}"
+        file_id = uploaded_file.name.replace(".pdf", "").replace(" ", "-").lower()
+        index_name = "resumatic-resumes"
         
         pinecone_client = get_pc()
         embedding_model = get_embedding()
@@ -75,11 +75,15 @@ def upload_and_chunk(request):
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
+            import time
+            while not pinecone_client.describe_index(index_name).status['ready']:
+                time.sleep(1)
 
         index = pinecone_client.Index(index_name)
         vectorstore = PineconeVectorStore(
             index=index,
-            embedding=embedding_model
+            embedding=embedding_model,
+            namespace=file_id
         )
 
         vectorstore.add_documents(chunks)
@@ -87,7 +91,7 @@ def upload_and_chunk(request):
         return JsonResponse({
             "success": True,
             "message": f"{len(chunks)} chunks uploaded",
-            "index_name": index_name
+            "index_name": file_id
         })
 
     except Exception as e:

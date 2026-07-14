@@ -82,13 +82,13 @@ def extract_company_from_jd(jd):
     except:
         return "Unknown"
 
-def data_fetching(query, index_name, pc, embedding):
+def data_fetching(query, file_id, pc, embedding):
     try:
-        if not query or not index_name:
+        if not query or not file_id:
             return []
 
-        index = pc.Index(index_name)
-        vector_store = LangChainPinecone(index=index, embedding=embedding)
+        index = pc.Index("resumatic-resumes")
+        vector_store = LangChainPinecone(index=index, embedding=embedding, namespace=file_id)
 
         results = vector_store.similarity_search(query, k=10)
 
