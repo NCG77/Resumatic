@@ -31,5 +31,5 @@ RUN python manage.py collectstatic --noinput
 # Expose port
 EXPOSE 10000
 
-# Run server
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:10000"]
+# Run server with Gunicorn
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:10000", "--workers", "3"]

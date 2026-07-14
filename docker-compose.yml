@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "10000:10000"
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+      - FRONTEND_URL=http://localhost:3000
+    # Add DATABASE_URL if you want to use Postgres:
+    # - DATABASE_URL=postgres://user:password@db:5432/dbname
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Update with your backend URL
+      - NEXT_PUBLIC_API_URL=http://backend:10000
+    depends_on:
+      - backend
+    restart: unless-stopped
