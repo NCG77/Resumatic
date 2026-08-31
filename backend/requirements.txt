@@ -5,7 +5,7 @@ whitenoise==6.6.0
 dj-database-url==2.1.0
 psycopg2-binary==2.9.9
 
-langchain==0.2.16
+langchain==0.3.30
 langchain-core==0.2.38
 langchain-community==0.2.16
 langchain-google-genai==1.0.10
